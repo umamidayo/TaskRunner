@@ -1,6 +1,6 @@
 # TaskRunner System
 
-An object-oriented RunService system for projects that require functions to run on an interval-based schedule. Perfect for managing recurring game logic, time-sensitive operations, and managing all RunService connections in a centralized location.
+An object-oriented RunService system for projects that require functions to run on an interval-based schedule: a great way to manage recurring game logic, automate functions in intervals, and manage all RunService connections in a centralized location.
 
 ## Architecture
 - **BaseTask**: Core functionality for task management
