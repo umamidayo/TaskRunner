@@ -2,14 +2,6 @@
 
 An object-oriented RunService system for projects that require functions to run on an interval-based schedule: a great way to manage recurring game logic, automate functions in intervals, and manage all RunService connections in a centralized location.
 
-## Architecture
-- **BaseTask**: Core functionality for task management
-- **Schedule**: Handles time-based game systems
-- **Render**: Manages frame-based updates (UI, effects)
-- **Config**: Centralizes system configuration
-- **TaskRunner**: Main module that coordinates all systems
-- **Access Tables**: Easy access to all game systems via `Schedules` and `Renders`
-
 ## Benefits of Centralized Task Scheduling
 1. **Simplified RunService Management**
    - No need to manage multiple RunService connections manually
