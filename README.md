@@ -134,7 +134,7 @@ This example demonstrates how to use TaskRunner's scheduling system to manage re
 - Managing multiple updates in a single task
 - Creating custom schedules with specific intervals
 - Removing tasks when they're no longer needed
-- Method chaining for cleaner code
+- Method chaining for creating sequences of tasks
 
 ```lua
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
