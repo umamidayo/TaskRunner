@@ -2,6 +2,49 @@
 
 A modular and maintainable task runner system for Roblox games that supports both time-based schedules and frame-based renders. Perfect for managing recurring game logic, UI updates, and other time-sensitive operations in your Roblox experiences.
 
+## Architecture
+
+- **BaseTask**: Core functionality for task management
+- **Schedule**: Handles time-based game systems
+- **Render**: Manages frame-based updates (UI, effects)
+- **Config**: Centralizes system configuration
+- **TaskRunner**: Main module that coordinates all systems
+- **Access Tables**: Easy access to all game systems via `Schedules` and `Renders`
+
+## Benefits
+
+1. **Simplified RunService Management**
+   - No need to manage multiple RunService connections manually
+   - Automatic cleanup of connections when tasks are removed
+   - Proper handling of both Heartbeat and RenderStepped events
+
+2. **Better Code Organization**
+   - Group related functionality into named schedules
+   - Keep timing-based code separate from business logic
+   - Easy to find and modify update frequencies
+
+3. **Improved Maintainability**
+   - Single place to manage all recurring tasks
+   - Clear separation between client and server tasks
+   - Easy to enable/disable systems during development
+
+4. **Developer Quality of Life**
+   - Simple API for adding and removing tasks
+   - No boilerplate code for timing or intervals
+   - Consistent pattern for all recurring operations
+
+5. **Safer Runtime Behavior**
+   - Tasks run in protected calls to prevent cascading errors
+   - Automatic cleanup when scripts are destroyed
+   - Proper handling of script lifetime and connections
+
+6. **Performance Considerations**
+   - Control update frequency to match needs
+   - Avoid unnecessary per-frame updates
+   - Group similar timing needs into shared schedules
+
+This system aims to make your development process smoother by handling the complexities of RunService connections and timing logic, letting you focus on building your game mechanics.
+
 ## Structure
 
 - `init.lua` - Main task runner module with public API
@@ -52,68 +95,106 @@ The `.init()` function will:
 - Server initialization handles game logic schedules
 - Client initialization handles both schedules and renders
 
-## Usage
+## Configuration
 
-### Basic Setup
+Customize the system by editing `Config.lua`. This configuration file allows you to define schedules and renders that will be automatically initialized when the TaskRunner starts:
 
-First, place the TaskRunner module in a suitable location in your game. Common locations include:
-- `ReplicatedStorage.Shared` for code shared between client and server
-- `ServerScriptService.Modules` for server-only functionality
-- `StarterPlayerScripts.Modules` for client-only functionality
+- **Schedules**: Define named intervals with their tick rates (in seconds)
+- **Renders**: Define render groups for frame-by-frame updates
+- **Extensible**: Add new schedules and renders as your game grows
+- **Centralized**: Keep all timing configurations in one place
 
-### Direct Access
+Config Example:
+```lua
+Config.Schedules = {
+    gameLoop = {
+        tick = 1, -- Run your entire game loop
+    },
+    npcSimulation = {
+        tick = 0.5, -- Simulate your NPC's behaviors and actions
+    },
+    Weather = {
+        tick = 5, -- Perform weather events every minute
+    }
+}
 
-The system provides direct access to all schedules and renders with full IntelliSense support:
+Config.Renders = {
+    Interface = {}, -- Render specific user interfaces
+    Particles = {}, -- Auto-emit particle systems
+    MeshAnimation = {} -- Update editable mesh deformations
+}
+```
+
+**Benefits of Scheduling:**
+
+1. **Centralized System Management:**
+   - Access all game systems through a single entry point
+   - Consistent API across different system types
+   - Easy to monitor and debug running tasks
+
+2. **Flexible Task Organization:**
+   - Group related tasks into logical schedules
+   - Adjust timing independently for each system
+   - Add or remove tasks dynamically at runtime
+
+3. **Resource Optimization:**
+   - Control update frequencies to match system needs
+   - Prevent unnecessary processing during idle periods
+   - Scale task execution based on game demands
+
+## Examples
+
+### Schedule Examples
 
 ```lua
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
 
--- Example: Create a schedule for updating player stats
-TaskRunner.Schedules.PlayerStats:addTask("UpdateEnergy", function(dt)
+TaskRunner.Schedules.Interval_1s:addTask("UpdatePlayerStats", function(dt)
     for _, player in ipairs(game.Players:GetPlayers()) do
-        -- Update player energy every 10 seconds
         local stats = player:FindFirstChild("Stats")
-        if stats then
-            stats.Energy.Value = math.min(stats.Energy.Value + 1, 100)
+        if not stats then continue end
+        
+        -- Regenerate health if below max
+        local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+        if humanoid and humanoid.Health < humanoid.MaxHealth then
+            humanoid.Health = math.min(humanoid.Health + 1, humanoid.MaxHealth)
+        end
+        
+        -- Restore energy over time
+        local energy = stats:FindFirstChild("Energy") 
+        if energy and energy.Value < 100 then
+            energy.Value = math.min(energy.Value + 2, 100)
+        end
+        
+        -- Reduce hunger level
+        local hunger = stats:FindFirstChild("Hunger")
+        if hunger then
+            hunger.Value = math.max(hunger.Value - 0.1, 0)
+            
+            -- Apply damage if starving
+            if hunger.Value <= 0 and humanoid then
+                humanoid.Health = math.max(0, humanoid.Health - 1)
+            end
         end
     end
 end)
-
--- Create custom schedules for game mechanics
-local combatSystem = TaskRunner.newScheduler("CombatSystem", 0.1) -- Updates every 0.1 seconds
-combatSystem:addTask("ProcessCombat", function(dt)
-    -- Process combat calculations
-    print("Processing combat", dt)
-end)
-
--- Chain multiple tasks for related game systems
-TaskRunner.Schedules.GameLoop
-    :addTask("UpdateNPCs", function(dt) 
-        -- Update NPC behavior
-    end)
-    :addTask("UpdateEnvironment", function(dt) 
-        -- Update environmental effects
-    end)
-
--- Remove tasks when no longer needed
-TaskRunner.Schedules.PlayerStats:removeTask("UpdateEnergy")
 ```
 
-### Using Renders (Client-side only)
+### Render Examples (Client-side only)
 
 Renders are perfect for smooth UI updates and visual effects that need to run every frame:
 
 ```lua
-local TaskRunner = require(game:GetService("ReplicatedStorage").Shared.TaskRunner)
+local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
 
 -- Update UI elements every frame
 TaskRunner.Renders.Interface:addTask("UpdateHealthBar", function(dt)
-    local player = game.Players.LocalPlayer
+    local player = Players.LocalPlayer
+    local healthGui: ScreenGui = player.PlayerGui.HealthGui
     local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
     if humanoid then
         -- Update health bar UI
-        local healthBar = player.PlayerGui:FindFirstChild("HealthBar")
+        local healthBar = healthGui:FindFirstChild("HealthBar")
         if healthBar then
             healthBar.Fill.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 1, 0)
         end
@@ -136,133 +217,35 @@ TaskRunner.Renders.Interface:removeTask("UpdateHealthBar")
 ### Utility Functions
 
 ```lua
-local TaskRunner = require(game:GetService("ReplicatedStorage").Shared.TaskRunner)
+local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
 
 -- Check if game systems are initialized
-if TaskRunner.hasScheduler("CombatSystem") then
-    print("Combat system is running")
+if TaskRunner.hasScheduler("Interval_1s") then
+    print("1 second interval schedule is running")
 end
 
--- Get specific schedulers for system modifications
-local playerStats = TaskRunner.getScheduler("PlayerStats")
-if playerStats then
-    playerStats:addTask("UpdateStamina", function(dt) end)
+-- Get specific schedules for system modifications
+local playerSystem = TaskRunner.getSchedule("Interval_1s")
+if playerSystem then
+    playerSystem:addTask("UpdateHealth", function(dt)
+        -- Update player health every second
+        local player = game.Players.LocalPlayer
+        local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.Health = math.min(humanoid.Health + 1, humanoid.MaxHealth)
+        end
+    end)
 end
 
 -- Monitor active systems
 local allSchedules = TaskRunner.getAllSchedulers()
 for name, schedule in pairs(allSchedules) do
-    print("Active game system:", name)
+    print("Active schedules:", name)
 end
 
 -- Monitor active renderers
 local allRenders = TaskRunner.getAllRenderers()
 for name, render in pairs(allRenders) do
-    print("Active renderer:", name)
+    print("Active renders:", name)
 end
-```
-
-### Default Schedules
-
-The system comes with these pre-configured schedules:
-
-- `TaskRunner.Schedules.GameLoop` - Runs every 10 seconds (for major game state updates)
-- `TaskRunner.Schedules.Vitals` - Runs every 1 second (for player stats, health, etc.)
-
-On the client, it also includes:
-- `TaskRunner.Renders.Interface` - Runs every frame (for smooth UI updates)
-
-### Configuration
-
-Customize the system by editing `Config.lua`:
-
-```lua
-Config.Schedules = {
-    PlayerStats = {
-        tick = 1, -- Update player stats every second
-    },
-    NPCBehavior = {
-        tick = 0.5, -- Update NPCs twice per second
-    },
-    Weather = {
-        tick = 5, -- Update weather every 5 seconds
-    }
-}
-
-Config.Renders = {
-    Interface = {}, -- UI updates
-    Particles = {}, -- Particle system updates
-    Animations = {} -- Custom animation handling
-}
-```
-
-**Benefits of Dictionary Configuration:**
-- **IntelliSense Support**: Get autocomplete for your game systems
-- **Type Safety**: Catch errors before they happen
-- **Maintainable Code**: Clear organization of game systems
-- **Easy Updates**: Quickly adjust update frequencies
-
-Access your configured systems:
-```lua
--- These will have full IntelliSense support
-TaskRunner.Schedules.PlayerStats:addTask("UpdateStats", function(dt) end)
-TaskRunner.Schedules.NPCBehavior:addTask("ProcessAI", function(dt) end)
-TaskRunner.Renders.Interface:addTask("UpdateUI", function(dt) end)
-```
-
-### Advanced Usage
-
-```lua
-local TaskRunner = require(game:GetService("ReplicatedStorage").Shared.TaskRunner)
-
--- Create a complex game system
-local battleSystem = TaskRunner.newScheduler("BattleSystem", 1/30) -- 30 updates per second
-battleSystem
-    :addTask("CombatCalculations", function(dt) 
-        -- Process damage, healing, etc.
-    end)
-    :addTask("StatusEffects", function(dt)
-        -- Update player buffs/debuffs
-    end)
-    :addTask("BattleState", function(dt)
-        -- Check victory/defeat conditions
-    end)
-
--- Access systems from different scripts
-TaskRunner.Schedules.BattleSystem:addTask("Rewards", function(dt)
-    -- Process battle rewards
-end)
-
--- Wait for systems to initialize
-local combatSystem = TaskRunner.waitForScheduler("BattleSystem", 5) -- 5 second timeout
-if combatSystem then
-    combatSystem:addTask("LateSetup", function(dt) end)
-end
-
--- Clean up when battle ends
-battleSystem:destroy() -- Removes all battle-related tasks
-```
-
-## Architecture
-
-- **BaseTask**: Core functionality for task management
-- **Schedule**: Handles time-based game systems
-- **Render**: Manages frame-based updates (UI, effects)
-- **Config**: Centralizes system configuration
-- **TaskRunner**: Main module that coordinates all systems
-- **Access Tables**: Easy access to all game systems via `Schedules` and `Renders`
-
-## Benefits
-
-1. **Roblox-Optimized**: Designed specifically for Roblox game development
-2. **Performance**: Efficient task scheduling and execution
-3. **Flexibility**: Works for both server and client-side systems
-4. **Maintainability**: Well-organized game systems
-5. **Error Handling**: Robust error catching and reporting
-6. **Debug-Friendly**: Easy to monitor and troubleshoot
-7. **Scalable**: Grows with your game's complexity
-8. **Modern Design**: Uses latest Roblox and Luau features
-9. **Best Practices**: Follows Roblox development standards
-10. **Documentation**: Comprehensive examples and explanations
-
-This system helps organize and manage complex game mechanics while maintaining performance and code quality in your Roblox experiences. 
+``` 
