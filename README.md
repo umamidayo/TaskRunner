@@ -111,10 +111,10 @@ Config.Schedules = {
         tick = 1, -- Run your entire game loop
     },
     npcSimulation = {
-        tick = 0.5, -- Simulate your NPC's behaviors and actions
+        tick = 0.1, -- Simulate your NPC's behaviors and actions
     },
     Weather = {
-        tick = 5, -- Perform weather events every minute
+        tick = 60, -- Perform weather events every minute
     }
 }
 
