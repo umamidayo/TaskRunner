@@ -51,7 +51,7 @@ The `.init()` function will:
 ⚠️ **Important Notes:**
 - Call TaskRunner's `.init()` function once per context (server / client)
 - If you've setup your configuration file to have existing Schedules and Renders, you do not need to use if-statements for `hasScheduler` to check if they're defined; the provided examples with if-statements are only showing you how they work.
-- It's highly recommended to update your user interface through a state machine or through event signals, rather than the TaskRunner. The examples provided are for typically for specific situations where the user interface requires a RunService connection.
+- It's highly recommended to update your user interface through a state machine or through event signals, rather than the TaskRunner. The examples provided are typically for specific situations where the user interface requires a RunService connection.
 
 #### Alternative Initialization
 You can also convert the TaskRunner file (`init.luau`) into a Script / LocalScript, parent all of the modules under it, and modify the `TaskRunner.init()` function to run on server start; this is an acceptable alternative for projects that don't have an initializing script.
