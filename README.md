@@ -27,7 +27,7 @@ This system aims to make your development process smoother by handling the compl
 - `Config.lua` - Dictionary-based configuration for defining your own schedules
 - `BaseTask.lua` - Base class for schedules and renders (inherited methods)
 - `Schedule.lua` - Time-based task executor
-- `Render.lua` - Frame-based task exectutor (client-side)
+- `Render.lua` - Frame-based task executor (client-side)
 - `README.md` - This documentation file
 
 ## Setup and Initialization
