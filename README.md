@@ -129,10 +129,18 @@ Config.Renders = {
 
 ### Schedule Example
 
+This example demonstrates how to use TaskRunner's scheduling system to manage recurring game logic. It shows:
+- How to add tasks to predefined schedules
+- Managing multiple updates in a single task
+- Creating custom schedules with specific intervals
+- Removing tasks when they're no longer needed
+- Method chaining for cleaner code
+
 ```lua
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
 
-TaskRunner.Schedules.Interval_1s:addTask("UpdatePlayerStats", function(dt)
+-- Using a predefined schedule
+TaskRunner.Schedules.Interval_1s:addTask("UpdatePlayerStats", function()
     for _, player in ipairs(game.Players:GetPlayers()) do
         local stats = player:FindFirstChild("Stats")
         if not stats then continue end
@@ -161,11 +169,68 @@ TaskRunner.Schedules.Interval_1s:addTask("UpdatePlayerStats", function(dt)
         end
     end
 end)
+
+-- Creating a custom schedule (runs every 0.1 seconds)
+local combatSystem = TaskRunner.newSchedule("CombatSystem", 0.1)
+
+-- Add multiple tasks with method chaining
+combatSystem
+    :addTask("ProcessAttacks", function()
+        -- Process player attacks
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local character = player.Character
+            if not character then continue end
+            
+            local weapon = character:FindFirstChild("Weapon")
+            if not weapon then continue end
+            
+            -- Process weapon attacks
+            if weapon:GetAttribute("IsAttacking") then
+                -- Your attack logic here
+            end
+        end
+    end)
+    :addTask("UpdateCooldowns", function()
+        -- Update ability cooldowns
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local abilities = player:FindFirstChild("Abilities")
+            if not abilities then continue end
+            
+            for _, ability in ipairs(abilities:GetChildren()) do
+                local cooldown = ability:GetAttribute("Cooldown")
+                if cooldown and cooldown > 0 then
+                    ability:SetAttribute("Cooldown", cooldown - 0.1)
+                end
+            end
+        end
+    end)
+
+-- Remove tasks when they're not needed
+TaskRunner.Schedules.Interval_1s:removeTask("UpdatePlayerStats")
+
+-- Or remove tasks from custom schedules
+combatSystem:removeTask("ProcessAttacks")
+
+-- Check if schedules exist before using them
+if TaskRunner.hasSchedule("CombatSystem") then
+    print("Combat system is running")
+end
+
+-- Get a schedule to modify it
+local schedule = TaskRunner.getSchedule("CombatSystem")
+if schedule then
+    schedule:addTask("NewTask", function()
+        -- Add new functionality
+    end)
+end
 ```
 
 ### Render Example (Client-side only)
 
-Renders are perfect for smooth UI updates and visual effects that need to run every frame:
+This example shows how TaskRunner handles frame-based updates on the client. It demonstrates:
+- Creating and managing render tasks for user interface updates
+- Creating custom renderers for specific needs
+- Task cleanup when transitioning between scenes
 
 ```lua
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
