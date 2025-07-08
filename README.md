@@ -23,11 +23,11 @@ An object-oriented RunService system for projects that require functions to run 
 This system aims to make your development process smoother by handling the complexities of RunService connections and timing logic, letting you focus on building your game mechanics.
 
 ## Structure
-- `init.lua` - Main task runner module with public API
-- `Config.lua` - Dictionary-based configuration for default schedules and renders
-- `BaseTask.lua` - Shared functionality between schedules and renders
-- `Schedule.lua` - Schedule class for time-based task execution
-- `Render.lua` - Render class for frame-based task execution
+- `init.lua` - The main module; handles RunService connections and scheduled tasks
+- `Config.lua` - Dictionary-based configuration for defining your own schedules
+- `BaseTask.lua` - Base class for schedules and renders (inherited methods)
+- `Schedule.lua` - Time-based task executor
+- `Render.lua` - Frame-based task exectutor (client-side)
 - `README.md` - This documentation file
 
 ## Setup and Initialization
