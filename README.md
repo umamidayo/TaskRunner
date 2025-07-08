@@ -1,9 +1,8 @@
 # TaskRunner System
 
-A modular and maintainable task runner system for Roblox games that supports both time-based schedules and frame-based renders. Perfect for managing recurring game logic, UI updates, and other time-sensitive operations in your Roblox experiences.
+An object-oriented RunService system for projects that require functions to run on an interval-based schedule. Perfect for managing recurring game logic, time-sensitive operations, and managing all RunService connections in a centralized location.
 
 ## Architecture
-
 - **BaseTask**: Core functionality for task management
 - **Schedule**: Handles time-based game systems
 - **Render**: Manages frame-based updates (UI, effects)
@@ -11,42 +10,27 @@ A modular and maintainable task runner system for Roblox games that supports bot
 - **TaskRunner**: Main module that coordinates all systems
 - **Access Tables**: Easy access to all game systems via `Schedules` and `Renders`
 
-## Benefits
-
+## Benefits of Centralized Task Scheduling
 1. **Simplified RunService Management**
    - No need to manage multiple RunService connections manually
    - Automatic cleanup of connections when tasks are removed
    - Proper handling of both Heartbeat and RenderStepped events
 
-2. **Better Code Organization**
-   - Group related functionality into named schedules
-   - Keep timing-based code separate from business logic
-   - Easy to find and modify update frequencies
-
-3. **Improved Maintainability**
+2. **Improved Maintainability**
    - Single place to manage all recurring tasks
    - Clear separation between client and server tasks
    - Easy to enable/disable systems during development
+   - Group similar timing needs into shared schedules
 
-4. **Developer Quality of Life**
+3. **Developer Quality of Life**
    - Simple API for adding and removing tasks
    - No boilerplate code for timing or intervals
    - Consistent pattern for all recurring operations
-
-5. **Safer Runtime Behavior**
-   - Tasks run in protected calls to prevent cascading errors
-   - Automatic cleanup when scripts are destroyed
-   - Proper handling of script lifetime and connections
-
-6. **Performance Considerations**
    - Control update frequency to match needs
-   - Avoid unnecessary per-frame updates
-   - Group similar timing needs into shared schedules
 
 This system aims to make your development process smoother by handling the complexities of RunService connections and timing logic, letting you focus on building your game mechanics.
 
 ## Structure
-
 - `init.lua` - Main task runner module with public API
 - `Config.lua` - Dictionary-based configuration for default schedules and renders
 - `BaseTask.lua` - Shared functionality between schedules and renders
@@ -55,54 +39,35 @@ This system aims to make your development process smoother by handling the compl
 - `README.md` - This documentation file
 
 ## Setup and Initialization
-
 ### 1. Module Setup
-First, place the TaskRunner module in a suitable location in your game. Common locations include:
-- `ReplicatedStorage.Shared` for code shared between client and server
-- `ServerScriptService.Modules` for server-only functionality
-- `StarterPlayerScripts.Modules` for client-only functionality
+It's recommended to place the TaskRunner files under `ReplicatedStorage` with the `init.luau` file as the primary parent, since TaskRunner can run on both the server and client.
 
 ### 2. System Initialization
-The TaskRunner MUST be initialized on both the client and server to start running. Add this to your initialization scripts:
+The TaskRunner is initialized by `TaskRunner.init()`, then it will start executing your tasks in timed intervals. To do this, write the initialization in your initialization script:
 
 ```lua
--- In a Server Script (e.g. game.ServerScriptService.GameInit)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
 
--- Initialize the system on the server
-TaskRunner.init()
-```
-
-```lua
--- In a Local Script (e.g. game.StarterPlayerScripts.ClientInit)
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
-
--- Initialize the system on the client
 TaskRunner.init()
 ```
 
 The `.init()` function will:
-- Create all configured schedules from `Config.lua`
-- Create renders on the client (renders only work client-side)
-- Start the update loops for both schedules and renders
-- Set up proper task execution timing
+1. Start the RunService connection
+2. Start executing tasks added to your schedules and renders
 
 ⚠️ **Important Notes:**
-- Always call `.init()` before adding any tasks
-- Call `.init()` only once per context (server/client)
-- Server initialization handles game logic schedules
-- Client initialization handles both schedules and renders
+- Call TaskRunner's `.init()` function once per context (server / client)
+- If you've setup your configuration file to have existing Schedules and Renders, you do not need to use if-statements for `hasScheduler` to check if they're defined; the provided examples with if-statements are only showing you how they work.
+- It's highly recommended to update your user interface through a state machine or through event signals, rather than the TaskRunner. The examples provided are for typically for specific situations where the user interface requires a RunService connection.
+
+#### Alternative Initialization
+You can also convert the TaskRunner file (`init.luau`) into a Script / LocalScript, parent all of the modules under it, and modify the `TaskRunner.init()` function to run on server start; this is an acceptable alternative for projects that don't have an initializing script.
 
 ## Configuration
-
 Customize the system by editing `Config.lua`. This configuration file allows you to define schedules and renders that will be automatically initialized when the TaskRunner starts:
-
 - **Schedules**: Define named intervals with their tick rates (in seconds)
 - **Renders**: Define render groups for frame-by-frame updates
-- **Extensible**: Add new schedules and renders as your game grows
-- **Centralized**: Keep all timing configurations in one place
 
 Config Example:
 ```lua
@@ -128,14 +93,12 @@ Config.Renders = {
 ## Examples
 
 ### Schedule Example
-
 This example demonstrates how to use TaskRunner's scheduling system to manage recurring game logic. It shows:
 - How to add tasks to predefined schedules
 - Managing multiple updates in a single task
 - Creating custom schedules with specific intervals
 - Removing tasks when they're no longer needed
 - Method chaining for creating sequences of tasks
-
 ```lua
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
 
@@ -226,12 +189,10 @@ end
 ```
 
 ### Render Example (Client-side only)
-
 This example shows how TaskRunner handles frame-based updates on the client. It demonstrates:
 - Creating and managing render tasks for user interface updates
 - Creating custom renderers for specific needs
 - Task cleanup when transitioning between scenes
-
 ```lua
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
 
