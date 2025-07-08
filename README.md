@@ -125,26 +125,9 @@ Config.Renders = {
 }
 ```
 
-**Benefits of Scheduling:**
-
-1. **Centralized System Management:**
-   - Access all game systems through a single entry point
-   - Consistent API across different system types
-   - Easy to monitor and debug running tasks
-
-2. **Flexible Task Organization:**
-   - Group related tasks into logical schedules
-   - Adjust timing independently for each system
-   - Add or remove tasks dynamically at runtime
-
-3. **Resource Optimization:**
-   - Control update frequencies to match system needs
-   - Prevent unnecessary processing during idle periods
-   - Scale task execution based on game demands
-
 ## Examples
 
-### Schedule Examples
+### Schedule Example
 
 ```lua
 local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
@@ -180,7 +163,7 @@ TaskRunner.Schedules.Interval_1s:addTask("UpdatePlayerStats", function(dt)
 end)
 ```
 
-### Render Examples (Client-side only)
+### Render Example (Client-side only)
 
 Renders are perfect for smooth UI updates and visual effects that need to run every frame:
 
