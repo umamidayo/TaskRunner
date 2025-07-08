@@ -11,6 +11,47 @@ A modular and maintainable task runner system for Roblox games that supports bot
 - `Render.lua` - Render class for frame-based task execution
 - `README.md` - This documentation file
 
+## Setup and Initialization
+
+### 1. Module Setup
+First, place the TaskRunner module in a suitable location in your game. Common locations include:
+- `ReplicatedStorage.Shared` for code shared between client and server
+- `ServerScriptService.Modules` for server-only functionality
+- `StarterPlayerScripts.Modules` for client-only functionality
+
+### 2. System Initialization
+The TaskRunner MUST be initialized on both the client and server to start running. Add this to your initialization scripts:
+
+```lua
+-- In a Server Script (e.g. game.ServerScriptService.GameInit)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
+
+-- Initialize the system on the server
+TaskRunner.init()
+```
+
+```lua
+-- In a Local Script (e.g. game.StarterPlayerScripts.ClientInit)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TaskRunner = require(ReplicatedStorage.Shared.TaskRunner)
+
+-- Initialize the system on the client
+TaskRunner.init()
+```
+
+The `.init()` function will:
+- Create all configured schedules from `Config.lua`
+- Create renders on the client (renders only work client-side)
+- Start the update loops for both schedules and renders
+- Set up proper task execution timing
+
+⚠️ **Important Notes:**
+- Always call `.init()` before adding any tasks
+- Call `.init()` only once per context (server/client)
+- Server initialization handles game logic schedules
+- Client initialization handles both schedules and renders
+
 ## Usage
 
 ### Basic Setup
